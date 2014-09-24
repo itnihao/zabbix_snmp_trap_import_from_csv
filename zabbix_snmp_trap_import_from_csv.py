@@ -231,20 +231,8 @@ def help_menu():
      """)
     exit()
 
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
-
-    # System Arguments check
-    if len(sys.argv) == 1 or len(sys.argv) != 5:
-        help_menu()
-
-    xml_file_name = sys.argv[1]
-    host_name = sys.argv[2]
-    host_group_name = sys.argv[3]
-    host_interface_ip = sys.argv[4]
-
-    csv_reader = read_from_csv('export_csv_from_ireasoning_mib_browser.csv')
-
+def zabbix_snmp_trap_import_from_csv(file_name, host_name, host_group_name, host_interface_ip):
+    csv_reader = read_from_csv(file_name)
     alarm_list = []
     for alarm_data in csv_reader:
 
@@ -263,7 +251,22 @@ if __name__ == '__main__':
         oid_dictionary['description'] = alarm_data[7].strip('"')
         alarm_list.append(oid_dictionary)
 
-
     xml_tree = generate_items_xml_file_complete(alarm_list, host_name, host_group_name, host_interface_ip)
-    xml_pretty_me(host_name.lower()+'-item-trigger-import.xml', ElementTree.tostring(xml_tree))
+    xml_tree_as_string = ElementTree.tostring(xml_tree)
+    return xml_tree_as_string
 
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+
+    # System Arguments check
+    if len(sys.argv) == 1 or len(sys.argv) != 5:
+        help_menu()
+
+    csv_file_name = sys.argv[1]
+    zabbix_host_name = sys.argv[2]
+    zabbix_host_group_name = sys.argv[3]
+    zabbix_host_interface_ip = sys.argv[4]
+
+    xml_tree_gen_as_string = zabbix_snmp_trap_import_from_csv(csv_file_name, zabbix_host_name, zabbix_host_group_name, zabbix_host_interface_ip)
+    xml_pretty_me(zabbix_host_name.lower()+'-item-trigger-import.xml', xml_tree_gen_as_string)
