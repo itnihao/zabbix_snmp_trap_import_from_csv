@@ -147,7 +147,7 @@ def item_creator_type_17(items, host_name, triggers, alarm_values):
     name.text = 'An Alarm Notification For : ' + alarm_values['name']
     type.text = '17'
     multiplier.text = '0'
-    key.text = 'snmptrap["('+ alarm_values['name'] + ')((.|[[:space:]])*)({#SNMPVALUE})"]'
+    key.text = 'snmptrap["(' + alarm_values['mib_module'] + '::' + alarm_values['name'] + ')((.|[[:space:]])*)({#SNMPVALUE})"]'
     delay.text = '0'
     history.text = '90'
     trends.text = '365'
@@ -176,7 +176,7 @@ def item_creator_type_17(items, host_name, triggers, alarm_values):
     trigger_type = SubElement(trigger, 'type')
     SubElement(trigger, 'dependencies')
 
-    trigger_expression.text = '{' + host_name + ':snmptrap["('+ alarm_values['name'] + ')((.|[[:space:]])*)({#SNMPVALUE})"].str(' + alarm_values['name'] + ')}=1'
+    trigger_expression.text = '{' + host_name + ':'+ key.text +'.str(' + alarm_values['name'] + ')}=1'
     trigger_name.text = 'ATTENTION : On {HOST.NAME}, An Alarm : ' + alarm_values['name'] + ' - {#SNMPVALUE}, From Module : ' +alarm_values['mib_module']
     trigger_status.text = '0'
     trigger_priority.text = '3'
