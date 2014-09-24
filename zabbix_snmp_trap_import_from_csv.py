@@ -1,3 +1,8 @@
+#!/usr/bin/python
+
+__author__ = 'ahmed'
+
+
 import csv
 import sys
 from logging import exception
@@ -7,6 +12,7 @@ from xml.etree.ElementTree import SubElement
 import datetime
 import logging
 from xml.dom import minidom
+
 # --------------------------------------------------------
 # Generate Complete Export/Import XML File
 # --------------------------------------------------------
@@ -79,7 +85,6 @@ def generate_items_xml_file_complete(alarm_list, host_name, host_group_name, hos
 
     # Iterate through the unique list to create XML
     for alarm_values in alarm_list:
-        #item_creator_type_4(items, host_name.upper(), triggers, alarm_values)
         item_creator_type_17(items, host_name.upper(), triggers, alarm_values)
 
     SubElement(host_under_hosts, 'discovery_rules')
@@ -92,92 +97,6 @@ def generate_items_xml_file_complete(alarm_list, host_name, host_group_name, hos
     SubElement(host_under_hosts, 'inventory')
 
     return  zabbix_export
-
-
-def item_creator_type_4(items, host_name, triggers, alarm_values):
-    item = SubElement(items, 'item')
-    name = SubElement(item, 'name')
-    type = SubElement(item, 'type')
-    snmp_community = SubElement(item, 'snmp_community')
-    multiplier = SubElement(item, 'multiplier')
-    snmp_oid = SubElement(item, 'snmp_oid')
-    key = SubElement(item, 'key')
-    delay = SubElement(item, 'delay')
-    history = SubElement(item, 'history')
-    trends = SubElement(item, 'trends')
-    status = SubElement(item, 'status')
-    value_type = SubElement(item, 'value_type')
-    SubElement(item, 'allowed_hosts')
-    SubElement(item, 'units')
-    delta = SubElement(item, 'delta')
-    SubElement(item, 'snmpv3_contextname')
-    SubElement(item, 'snmpv3_securityname')
-    snmpv3_securitylevel = SubElement(item, 'snmpv3_securitylevel')
-    snmpv3_authprotocol = SubElement(item, 'snmpv3_authprotocol')
-    SubElement(item, 'snmpv3_authpassphrase')
-    snmpv3_privprotocol = SubElement(item, 'snmpv3_privprotocol')
-    SubElement(item, 'snmpv3_privpassphrase')
-    formula = SubElement(item, 'formula')
-    SubElement(item, 'delay_flex')
-    SubElement(item, 'params')
-    SubElement(item, 'ipmi_sensor')
-    data_type = SubElement(item, 'data_type')
-    authtype = SubElement(item, 'authtype')
-    SubElement(item, 'username')
-    SubElement(item, 'password')
-    SubElement(item, 'publickey')
-    SubElement(item, 'privatekey')
-    SubElement(item, 'port')
-    description = SubElement(item, 'description')
-    inventory_link = SubElement(item, 'inventory_link')
-    SubElement(item, 'valuemap')
-    applications = SubElement(item, 'applications')
-    application = SubElement(applications, 'application')
-    application_name = SubElement(application, 'name')
-    interface_ref = SubElement(item, 'interface_ref')
-
-    #
-    # Setting basic information for the item.
-    #
-    name.text = 'An Alarm Notification For : ' + alarm_values['name']
-    type.text = '4'
-    snmp_community.text ='{$SNMP_COMMUNITY}'
-    multiplier.text = '0'
-    snmp_oid.text = alarm_values['oid']
-    key.text = alarm_values['name']
-    delay.text = '30'
-    history.text = '90'
-    trends.text = '365'
-    status.text = '0'
-    value_type.text = '3'
-    delta.text = '0'
-    snmpv3_securitylevel.text = '0'
-    snmpv3_authprotocol.text = '0'
-    snmpv3_privprotocol.text = '0'
-    formula.text = '1'
-    data_type.text = '0'
-    authtype.text = '0'
-    inventory_link.text = '0'
-    description.text = alarm_values['description']
-    interface_ref.text = 'if1'
-    application_name.text = 'Alarms'
-
-    trigger = SubElement(triggers, 'trigger')
-    trigger_expression = SubElement(trigger, 'expression')
-    trigger_name = SubElement(trigger, 'name')
-    SubElement(trigger, 'url')
-    trigger_status = SubElement(trigger, 'status')
-    trigger_priority = SubElement(trigger, 'priority')
-    trigger_description = SubElement(trigger, 'description')
-    trigger_type = SubElement(trigger, 'type')
-    SubElement(trigger, 'dependencies')
-
-    trigger_expression.text = '{'+host_name+':'+key.text+'.last()}=1'
-    trigger_name.text = 'ATTENTION : {HOST.NAME} An Alarm :' + key.text + ' is generated'
-    trigger_status.text = '0'
-    trigger_priority.text = '3'
-    trigger_description.text = description.text
-    trigger_type.text = '0'
 
 
 def item_creator_type_17(items, host_name, triggers, alarm_values):
