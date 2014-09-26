@@ -13,6 +13,44 @@ import datetime
 import logging
 from xml.dom import minidom
 
+
+
+
+# dictionary to hold IANA SMI numbers.
+iana_smi_numbers = {
+                '1': 'iso',
+                '1.3': 'org',
+                '1.3.6': 'dod',
+                '1.3.6.1': 'internet',
+                '1.3.6.1.1': 'directory',
+                '1.3.6.1.2': 'mgmt',
+                '1.3.6.1.2.1': 'mib-2',
+                '1.3.6.1.2.1.2.2.1.3': 'ifType',
+                '1.3.6.1.2.1.10': 'transmission',
+                '1.3.6.1.2.1.10.23': 'transmissionppp',
+                '1.3.6.1.2.1.27': 'application',
+                '1.3.6.1.2.1.28': 'mta',
+                '1.3.6.1.2.2': 'pib',
+                '1.3.6.1.3': 'experimental',
+                '1.3.6.1.4': 'private',
+                '1.3.6.1.4.1': 'enterprise',
+                '1.3.6.1.5': 'security',
+                '1.3.6.1.6': 'SNMPv2',
+                '1.3.6.1.6.1': 'snmpDomains',
+                '1.3.6.1.6.2': 'snmpProxys',
+                '1.3.6.1.6.3': 'snmpModules',
+                '1.3.6.1.7': 'mail',
+                '1.3.6.1.8': 'features'
+                }
+
+def get_smi_number_to_name(smi_number):
+    if smi_number not in iana_smi_numbers:
+        logging.debug("smi_number %s, Not Found", smi_number)
+        return False
+    else:
+        return iana_smi_numbers[smi_number]
+    pass
+
 # --------------------------------------------------------
 # Generate Complete Export/Import XML File
 # --------------------------------------------------------
@@ -85,7 +123,7 @@ def generate_items_xml_file_complete(alarm_list, host_name, host_group_name, hos
 
     # Iterate through the unique list to create XML
     for alarm_values in alarm_list:
-        item_creator_type_17(items, host_name.upper(), triggers, alarm_values)
+        item_creator_type_17_oid(items, host_name.upper(), triggers, alarm_values)
 
     SubElement(host_under_hosts, 'discovery_rules')
     macros = SubElement(host_under_hosts, 'macros')
@@ -97,6 +135,92 @@ def generate_items_xml_file_complete(alarm_list, host_name, host_group_name, hos
     SubElement(host_under_hosts, 'inventory')
 
     return  zabbix_export
+
+
+def item_creator_type_17_oid(items, host_name, triggers, alarm_values):
+    item = SubElement(items, 'item')
+    name = SubElement(item, 'name')
+    type = SubElement(item, 'type')
+    SubElement(item, 'snmp_community')
+    multiplier = SubElement(item, 'multiplier')
+    SubElement(item, 'snmp_oid')
+    key = SubElement(item, 'key')
+    delay = SubElement(item, 'delay')
+    history = SubElement(item, 'history')
+    trends = SubElement(item, 'trends')
+    status = SubElement(item, 'status')
+    value_type = SubElement(item, 'value_type')
+    SubElement(item, 'allowed_hosts')
+    SubElement(item, 'units')
+    delta = SubElement(item, 'delta')
+    SubElement(item, 'snmpv3_contextname')
+    SubElement(item, 'snmpv3_securityname')
+    snmpv3_securitylevel = SubElement(item, 'snmpv3_securitylevel')
+    snmpv3_authprotocol = SubElement(item, 'snmpv3_authprotocol')
+    SubElement(item, 'snmpv3_authpassphrase')
+    snmpv3_privprotocol = SubElement(item, 'snmpv3_privprotocol')
+    SubElement(item, 'snmpv3_privpassphrase')
+    formula = SubElement(item, 'formula')
+    SubElement(item, 'delay_flex')
+    SubElement(item, 'params')
+    SubElement(item, 'ipmi_sensor')
+    data_type = SubElement(item, 'data_type')
+    authtype = SubElement(item, 'authtype')
+    SubElement(item, 'username')
+    SubElement(item, 'password')
+    SubElement(item, 'publickey')
+    SubElement(item, 'privatekey')
+    SubElement(item, 'port')
+    description = SubElement(item, 'description')
+    inventory_link = SubElement(item, 'inventory_link')
+    SubElement(item, 'valuemap')
+    applications = SubElement(item, 'applications')
+    application = SubElement(applications, 'application')
+    application_name = SubElement(application, 'name')
+    interface_ref = SubElement(item, 'interface_ref')
+
+    #
+    # Setting basic information for the item.
+    #
+    name.text = 'An Alarm Notification For : ' + alarm_values['name']
+    type.text = '17'
+    multiplier.text = '0'
+    key.text = 'snmptrap["'+ alarm_values['oid'] +'"]'
+    delay.text = '0'
+    history.text = '90'
+    trends.text = '365'
+    status.text = '0'
+    value_type.text = '2'
+    delta.text = '0'
+    snmpv3_securitylevel.text = '0'
+    snmpv3_authprotocol.text = '0'
+    snmpv3_privprotocol.text = '0'
+    formula.text = '1'
+    data_type.text = '0'
+    authtype.text = '0'
+    inventory_link.text = '0'
+    description.text = alarm_values['description']
+    interface_ref.text = 'if1'
+
+    application_name.text = 'Alarms'
+
+    trigger = SubElement(triggers, 'trigger')
+    trigger_expression = SubElement(trigger, 'expression')
+    trigger_name = SubElement(trigger, 'name')
+    SubElement(trigger, 'url')
+    trigger_status = SubElement(trigger, 'status')
+    trigger_priority = SubElement(trigger, 'priority')
+    trigger_description = SubElement(trigger, 'description')
+    trigger_type = SubElement(trigger, 'type')
+    SubElement(trigger, 'dependencies')
+
+    trigger_expression.text = '{' + host_name + ':'+ key.text +'.str("' + alarm_values['oid'] + '")}=1'
+    trigger_name.text = 'ATTENTION : On {HOST.NAME}, An Alarm : ' + alarm_values['name'] + ', From Module : ' +alarm_values['mib_module']
+    trigger_status.text = '0'
+    trigger_priority.text = '3'
+    trigger_description.text = description.text
+    trigger_type.text = '0'
+
 
 
 def item_creator_type_17(items, host_name, triggers, alarm_values):
@@ -231,6 +355,7 @@ def help_menu():
      """)
     exit()
 
+# @param
 def zabbix_snmp_trap_import_from_csv(file_name, host_name, host_group_name, host_interface_ip):
     csv_reader = read_from_csv(file_name)
     alarm_list = []
@@ -243,7 +368,15 @@ def zabbix_snmp_trap_import_from_csv(file_name, host_name, host_group_name, host
         oid_dictionary = {}
         oid_dictionary['name'] = alarm_data[0]
         oid_dictionary['full_name'] = alarm_data[1]
-        oid_dictionary['oid'] = alarm_data[2]
+
+        oid_to_convert = str(alarm_data[2])[1:]
+        smi_name = get_smi_number_to_name(oid_to_convert[:11])
+        if smi_name != False:
+            iana_name_from_oid = smi_name + oid_to_convert[11:]
+            oid_dictionary['oid'] = iana_name_from_oid
+        else:
+            oid_dictionary['oid'] = alarm_data[2]
+
         oid_dictionary['type'] = alarm_data[3]
         oid_dictionary['access'] = alarm_data[4]
         oid_dictionary['indexes'] = alarm_data[5]
@@ -270,3 +403,4 @@ if __name__ == '__main__':
 
     xml_tree_gen_as_string = zabbix_snmp_trap_import_from_csv(csv_file_name, zabbix_host_name, zabbix_host_group_name, zabbix_host_interface_ip)
     xml_pretty_me(zabbix_host_name.lower()+'-item-trigger-import.xml', xml_tree_gen_as_string)
+
