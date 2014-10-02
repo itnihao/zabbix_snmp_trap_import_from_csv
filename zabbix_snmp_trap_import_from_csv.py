@@ -33,7 +33,7 @@ iana_smi_numbers = {
                 '1.3.6.1.2.2': 'pib',
                 '1.3.6.1.3': 'experimental',
                 '1.3.6.1.4': 'private',
-                '1.3.6.1.4.1': 'enterprise',
+                '1.3.6.1.4.1': 'enterprises',
                 '1.3.6.1.5': 'security',
                 '1.3.6.1.6': 'SNMPv2',
                 '1.3.6.1.6.1': 'snmpDomains',
@@ -131,11 +131,17 @@ def generate_items_xml_file_complete(alarm_list, host_name, host_group_name, hos
     sub_macro = SubElement(macro, 'macro')
     value = SubElement(macro, 'value')
     sub_macro.text = '{$SNMP_COMMUNITY}'
-    value.text = 'Public'
+
+    if 'GGSN' in host_name:
+        value.text = 'Public'
+    elif 'ITP1' in host_name:
+        value.text = 'mobileumro'
+    else:
+        value.text = 'public'
+
     SubElement(host_under_hosts, 'inventory')
 
     return  zabbix_export
-
 
 def item_creator_type_17_oid(items, host_name, triggers, alarm_values):
     item = SubElement(items, 'item')
