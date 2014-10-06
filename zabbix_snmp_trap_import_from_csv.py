@@ -12,6 +12,7 @@ from xml.etree.ElementTree import SubElement
 import datetime
 import logging
 from xml.dom import minidom
+import argparse
 
 
 
@@ -318,13 +319,13 @@ def xml_pretty_me(file_name_for_prettify, string_to_prettify):
     #
     # Open a file and write to it and we are done.
     #
-    logging.info("Creating File %s", file_name_for_prettify)
+    logging.debug("Creating File %s", file_name_for_prettify)
 
     xml = minidom.parseString(string_to_prettify)
     pretty_xml_as_string = xml.toprettyxml()
     output_file = open(file_name_for_prettify, 'w' )
     output_file.write(pretty_xml_as_string)
-    logging.info("Creation Complete")
+    logging.debug("Creation Complete")
     output_file.close()
 
 def read_from_csv(csv_file_name):
@@ -335,31 +336,6 @@ def read_from_csv(csv_file_name):
         print("Something went wrong in reading file" + str(exception))
         exit()
 
-
-# --------------------------------------------------------
-# Help Menu
-# --------------------------------------------------------
-def help_menu():
-    logging.error(" Wrong Arguments - Please see below for more information")
-    logging.error("""\n
-     --------------------------------------------
-                        USAGE
-     --------------------------------------------
-
-     1. To Generate xml import file.
-     --------------------------------------------
-     python zabbix_snmp_trap_import_from_csv.py <export_csv> <host_name> <host_group_name> <host_interface_name>
-     \texample: python zabbix_snmp_trap_import_from_csv.py export_csv_from_ireasoning_mib_browser.csv GGSN-1-LONDON GGSN-GROUP 127.0.0.1
-
-     Parameter Information
-     --------------------------------------------
-     <export_csv>           : Is the XML KPI file for GGSN Device.
-     <host_name>            : Host name as given in Zabbix server.
-     <host_group_name>      : Host Group which the host belongs to, as in Zabbix server.
-     <host_interface_ip>    : SNMP Interface configured on Zabbix server. (Assuming Single Interface in Configured)
-     --------------------------------------------
-     """)
-    exit()
 
 # @param
 def zabbix_snmp_trap_import_from_csv(file_name, host_name, host_group_name, host_interface_ip):
@@ -388,7 +364,11 @@ def zabbix_snmp_trap_import_from_csv(file_name, host_name, host_group_name, host
         oid_dictionary['indexes'] = alarm_data[5]
         oid_dictionary['mib_module'] = alarm_data[6]
         oid_dictionary['description'] = alarm_data[7].strip('"')
+        logging.debug('oid_dictionary:' + str(oid_dictionary))
+
         alarm_list.append(oid_dictionary)
+
+
 
     xml_tree = generate_items_xml_file_complete(alarm_list, host_name, host_group_name, host_interface_ip)
     xml_tree_as_string = ElementTree.tostring(xml_tree)
@@ -396,16 +376,33 @@ def zabbix_snmp_trap_import_from_csv(file_name, host_name, host_group_name, host
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
 
-    # System Arguments check
-    if len(sys.argv) == 1 or len(sys.argv) != 5:
-        help_menu()
+    parser = argparse.ArgumentParser(description='''Select the Alarms from the iReasoning MIB browser and Export them as CSV.
+                                                    This Script expect MIB information to be in CSV format.
+                                                    Export from a iReasoning Browser will generate CSV as below.
+                                                    "Name","Full Name","OID","Type","Access","Indexes","MIB Module","Description".
+                                                    We use this information to create snmptrap items and corresponding Trigger in the XML.
+                                                    Which can be imported directly.''')
 
-    csv_file_name = sys.argv[1]
-    zabbix_host_name = sys.argv[2]
-    zabbix_host_group_name = sys.argv[3]
-    zabbix_host_interface_ip = sys.argv[4]
+
+    parser.add_argument('-e', '--export-csv', help='OID file, Gives all OIDs on the device', required=True)
+    parser.add_argument('-n', '--host-name', help='Host name as given in Zabbix server.', required=True)
+    parser.add_argument('-g', '--host-group', help='Host Group which the host belongs to, as in Zabbix server.', required=True)
+    parser.add_argument('-i', '--host-interface', help='SNMP Interface configured on Zabbix server. (Assuming Single Interface in Configured)', required=True)
+    parser.add_argument('-d', '--debug', help='Running Debug mode - More Verbose', action="store_true")
+    parser.add_argument('-v', '--verbose', help='Running Debug mode - More Verbose', action="store_true")
+    args = parser.parse_args()
+
+    csv_file_name = args.export_csv
+    zabbix_host_name = args.host_name
+    zabbix_host_group_name = args.host_group
+    zabbix_host_interface_ip = args.host_interface
+
+
+    if args.debug or args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
 
     xml_tree_gen_as_string = zabbix_snmp_trap_import_from_csv(csv_file_name, zabbix_host_name, zabbix_host_group_name, zabbix_host_interface_ip)
     xml_pretty_me(zabbix_host_name.lower()+'-item-trigger-import.xml', xml_tree_gen_as_string)
